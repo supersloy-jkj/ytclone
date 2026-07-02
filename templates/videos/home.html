@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Home" %} - YTClone{% endblock %}
+
+{% block content %}
+<!-- Category Pills -->
+<div class="yt-pills-wrap">
+  <div class="yt-pills">
+    <a href="{% url 'home' %}"
+       class="yt-pill {% if not selected_category %}active{% endif %}">{% trans "All" %}</a>
+    {% for cat in categories %}
+      <a href="?category={{ cat.slug }}"
+         class="yt-pill {% if selected_category == cat.slug %}active{% endif %}">
+        {{ cat.name }}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Video Grid -->
+{% if videos %}
+<div class="yt-video-grid">
+  {% for video in videos %}
+  <div class="yt-video-card">
+    <!-- Thumbnail -->
+    <a href="{% url 'video_detail' video.pk %}">
+      <div class="yt-thumb-wrap">
+        {% if video.thumbnail %}
+          <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" loading="lazy">
+        {% else %}
+          <div class="yt-thumb-placeholder">
+            <i class="bi bi-play-circle"></i>
+          </div>
+        {% endif %}
+        {% if video.has_captions %}
+        <span class="yt-cc-badge" title="{% trans 'Captions available' %}">CC</span>
+        {% endif %}
+      </div>
+    </a>
+
+    <!-- Info Row -->
+    <div class="yt-video-info">
+      <a href="{% url 'channel' video.uploader.username %}">
+        {% if video.uploader.avatar %}
+          <img src="{{ video.uploader.avatar.url }}" class="yt-channel-avatar" alt="{{ video.uploader.username }}">
+        {% else %}
+          <div class="yt-channel-avatar-placeholder">{{ video.uploader.username|first|upper }}</div>
+        {% endif %}
+      </a>
+      <div class="yt-video-meta">
+        <a href="{% url 'video_detail' video.pk %}" class="yt-video-title">{{ video.title }}</a>
+        <a href="{% url 'channel' video.uploader.username %}" class="yt-video-channel">
+          {{ video.uploader.username }}
+        </a>
+        <div class="yt-video-stats">
+          {% blocktrans count counter=video.views %}{{ counter }} view{% plural %}{{ counter }} views{% endblocktrans %}
+          &bull; {% blocktrans with t=video.uploaded_at|timesince %}{{ t }} ago{% endblocktrans %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div style="text-align:center; padding:80px 20px; color:#606060;">
+  <i class="bi bi-camera-video" style="font-size:64px; color:#e5e5e5;"></i>
+  <p style="font-size:16px; margin-top:16px;">{% trans "No videos yet." %}</p>
+  {% if user.is_authenticated %}
+    <a href="{% url 'upload_video' %}" style="background:#065fd4;color:#fff;border-radius:20px;padding:10px 20px;text-decoration:none;font-size:14px;font-weight:500;">
+      {% trans "Upload your first video" %}
+    </a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

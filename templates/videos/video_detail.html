@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ video.title }} - YTClone{% endblock %}
+
+{% block content %}
+<div class="yt-watch-layout">
+
+  <!-- ===== PRIMARY (left) ===== -->
+  <div class="yt-watch-primary">
+
+    <!-- Player -->
+    <div class="yt-player-wrap" id="ytPlayer">
+      <video id="ytVideo" preload="auto" playsinline
+             poster="{% if video.thumbnail %}{{ video.thumbnail.url }}{% endif %}">
+        <source src="{{ video.video_file.url }}" type="video/mp4">
+        {% for caption in captions %}
+        <track kind="subtitles" src="{{ caption.file.url }}" srclang="{{ caption.language }}"
+               label="{{ caption.get_language_display }}"{% if caption.is_default %} default{% endif %}>
+        {% endfor %}
+        {% trans "Your browser does not support the video tag." %}
+      </video>
+
+      <!-- click layer: toggles play/pause -->
+      <div class="yt-click-layer" id="ytClickLayer"></div>
+
+      <!-- big center play button (paused state) -->
+      <button class="yt-big-play" id="ytBigPlay" aria-label="{% trans 'Play' %}">
+        <i class="bi bi-play-fill"></i>
+      </button>
+
+      <!-- buffering spinner -->
+      <div class="yt-spinner" id="ytSpinner"></div>
+
+      <!-- controls -->
+      <div class="yt-controls" id="ytControls">
+        <!-- progress / seek -->
+        <div class="yt-progress-bar" id="ytProgressBar">
+          <div class="yt-progress-buffered" id="ytBuffered"></div>
+          <input type="range" class="yt-range yt-seek" id="ytSeek"
+                 min="0" max="100" step="0.01" value="0" aria-label="{% trans 'Seek' %}">
+        </div>
+
+        <div class="yt-controls-row">
+          <button class="yt-ctrl-btn" id="ytPlayBtn" aria-label="{% trans 'Play' %}">
+            <i class="bi bi-play-fill"></i>
+          </button>
+
+          <div class="yt-volume">
+            <button class="yt-ctrl-btn" id="ytMuteBtn" aria-label="{% trans 'Mute' %}">
+              <i class="bi bi-volume-up-fill"></i>
+            </button>
+            <input type="range" class="yt-range yt-volume-range" id="ytVolume"
+                   min="0" max="1" step="0.01" value="1" aria-label="{% trans 'Volume' %}">
+          </div>
+
+          <span class="yt-time" id="ytTime">0:00 / 0:00</span>
+
+          <div class="yt-controls-spacer"></div>
+
+          {% if captions %}
+          <div class="yt-cc-wrap">
+            <button class="yt-ctrl-btn" id="ytCcBtn" aria-label="{% trans 'Subtitles/closed captions' %}" title="{% trans 'Subtitles/closed captions' %}">
+              <i class="bi bi-badge-cc"></i>
+            </button>
+            <div class="yt-cc-menu" id="ytCcMenu">
+              <div class="yt-cc-menu-title">{% trans "Subtitles/CC" %}</div>
+              <button class="yt-cc-option" data-index="-1">{% trans "Off" %}</button>
+              {% for caption in captions %}
+              <button class="yt-cc-option" data-index="{{ forloop.counter0 }}"{% if caption.is_default %} data-default="true"{% endif %}>{{ caption.get_language_display }}</button>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <select class="yt-speed" id="ytSpeed" aria-label="{% trans 'Playback speed' %}" title="{% trans 'Playback speed' %}">
+            <option value="0.25">0.25x</option>
+            <option value="0.5">0.5x</option>
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>{% trans "Normal" %}</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+
+          <button class="yt-ctrl-btn" id="ytPipBtn" aria-label="{% trans 'Picture-in-picture' %}" title="{% trans 'Miniplayer' %}">
+            <i class="bi bi-pip"></i>
+          </button>
+
+          <button class="yt-ctrl-btn" id="ytFsBtn" aria-label="{% trans 'Fullscreen' %}" title="{% trans 'Fullscreen' %}">
+            <i class="bi bi-arrows-fullscreen"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h1 class="yt-watch-title">{{ video.title }}</h1>
+
+    <!-- Action Bar -->
+    <div class="yt-action-bar">
+      <!-- Like / Dislike -->
+      <div class="yt-action-left">
+        {% if user.is_authenticated %}
+        <div class="yt-like-group">
+          <a href="{% url 'vote_video' video.pk 'like' %}"
+             class="yt-action-btn {% if user_vote == 'like' %}active{% endif %}">
+            <i class="bi bi-hand-thumbs-up"></i> {{ video.like_count }}
+          </a>
+          <div class="yt-like-divider"></div>
+          <a href="{% url 'vote_video' video.pk 'dislike' %}"
+             class="yt-action-btn {% if user_vote == 'dislike' %}active{% endif %}">
+            <i class="bi bi-hand-thumbs-down"></i>
+          </a>
+        </div>
+        {% else %}
+        <div class="yt-like-group">
+          <span class="yt-action-btn"><i class="bi bi-hand-thumbs-up"></i> {{ video.like_count }}</span>
+          <div class="yt-like-divider"></div>
+          <span class="yt-action-btn"><i class="bi bi-hand-thumbs-down"></i></span>
+        </div>
+        {% endif %}
+        <button class="yt-action-btn"><i class="bi bi-share"></i> {% trans "Share" %}</button>
+        <button class="yt-action-btn"><i class="bi bi-download"></i> {% trans "Download" %}</button>
+        <button class="yt-action-btn"><i class="bi bi-bookmark-plus"></i> {% trans "Save" %}</button>
+      </div>
+
+      <!-- Edit / Delete (owner only) -->
+      {% if user == video.uploader %}
+      <div class="yt-action-right">
+        <a href="{% url 'edit_video' video.pk %}" class="yt-action-btn">
+          <i class="bi bi-pencil"></i> {% trans "Edit" %}
+        </a>
+        <a href="{% url 'delete_video' video.pk %}" class="yt-action-btn" style="color:#cc0000;">
+          <i class="bi bi-trash"></i>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Channel Row -->
+    <div class="yt-channel-row">
+      <a href="{% url 'channel' video.uploader.username %}">
+        {% if video.uploader.avatar %}
+          <img src="{{ video.uploader.avatar.url }}" class="yt-channel-row-avatar" alt="{{ video.uploader.username }}">
+        {% else %}
+          <div class="yt-channel-row-placeholder">{{ video.uploader.username|first|upper }}</div>
+        {% endif %}
+      </a>
+      <div class="yt-channel-row-info">
+        <a href="{% url 'channel' video.uploader.username %}" class="yt-channel-row-name">
+          {{ video.uploader.username }}
+        </a>
+        <div class="yt-channel-row-subs">{% blocktrans count counter=video.uploader.subscriber_count %}{{ counter }} subscriber{% plural %}{{ counter }} subscribers{% endblocktrans %}</div>
+      </div>
+      {% if user.is_authenticated and user != video.uploader %}
+        <a href="{% url 'toggle_subscription' video.uploader.username %}"
+           class="yt-subscribe-btn {% if is_subscribed %}subscribed{% endif %}">
+          {% if is_subscribed %}{% trans "Subscribed" %}{% else %}{% trans "Subscribe" %}{% endif %}
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Description Box -->
+    {% if video.description %}
+    <div class="yt-description-box" id="desc-box" onclick="toggleDesc()">
+      <div class="stats">
+        {% blocktrans count counter=video.views %}{{ counter }} view{% plural %}{{ counter }} views{% endblocktrans %} &nbsp;&bull;&nbsp; {{ video.uploaded_at|date:"M d, Y" }}
+        {% if video.category %}&nbsp;&bull;&nbsp; {{ video.category.name }}{% endif %}
+      </div>
+      <div class="yt-description-text collapsed" id="desc-text">{{ video.description }}</div>
+      <button style="background:none;border:none;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;" id="desc-toggle">
+        {% trans "...more" %}
+      </button>
+    </div>
+    {% else %}
+    <div class="yt-description-box">
+      <div class="stats">{% blocktrans count counter=video.views %}{{ counter }} view{% plural %}{{ counter }} views{% endblocktrans %} &nbsp;&bull;&nbsp; {{ video.uploaded_at|date:"M d, Y" }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Comments -->
+    <div class="yt-comments-section">
+      <div class="yt-comments-title">{% blocktrans count counter=video.comment_count %}{{ counter }} Comment{% plural %}{{ counter }} Comments{% endblocktrans %}</div>
+
+      {% if user.is_authenticated %}
+      <div class="yt-comment-input-row">
+        <div class="yt-comment-avatar">{{ user.username|first|upper }}</div>
+        <form style="flex:1;" method="post" action="{% url 'add_comment' video.pk %}">
+          {% csrf_token %}
+          <textarea name="content" class="yt-comment-input" rows="1"
+                    placeholder="{% trans 'Add a comment...' %}" required
+                    oninput="this.rows = Math.min(6, Math.max(1, this.scrollHeight / 22))"></textarea>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+            <button type="button" class="yt-action-btn" onclick="this.closest('form').reset()">{% trans "Cancel" %}</button>
+            <button type="submit" class="yt-action-btn active">{% trans "Comment" %}</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Comment List -->
+      {% for comment in comments %}
+      <div class="yt-comment">
+        <div class="yt-comment-avatar">{{ comment.user.username|first|upper }}</div>
+        <div class="yt-comment-body">
+          <div>
+            <span class="yt-comment-author">{{ comment.user.username }}</span>
+            <span class="yt-comment-time">{% blocktrans with t=comment.created_at|timesince %}{{ t }} ago{% endblocktrans %}</span>
+          </div>
+          <p class="yt-comment-text">{{ comment.content }}</p>
+          <div class="yt-comment-actions">
+            <button class="yt-comment-action-btn"><i class="bi bi-hand-thumbs-up"></i></button>
+            <button class="yt-comment-action-btn"><i class="bi bi-hand-thumbs-down"></i></button>
+            {% if user.is_authenticated %}
+            <button class="yt-comment-action-btn"
+                    onclick="document.getElementById('reply-{{ comment.pk }}').classList.toggle('d-none')">
+              {% trans "Reply" %}
+            </button>
+            {% endif %}
+            {% if user == comment.user %}
+            <a href="{% url 'delete_comment' comment.pk %}" class="yt-comment-action-btn" style="color:#cc0000;">
+              <i class="bi bi-trash"></i>
+            </a>
+            {% endif %}
+          </div>
+
+          <!-- Reply form -->
+          {% if user.is_authenticated %}
+          <form method="post" action="{% url 'add_comment' video.pk %}"
+                class="d-none mt-2" id="reply-{{ comment.pk }}">
+            {% csrf_token %}
+            <input type="hidden" name="parent_id" value="{{ comment.pk }}">
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+              <textarea name="content" rows="1" class="yt-comment-input" placeholder="{% trans 'Add a reply...' %}"></textarea>
+              <button type="submit" class="yt-action-btn active">{% trans "Reply" %}</button>
+            </div>
+          </form>
+          {% endif %}
+
+          <!-- Replies -->
+          {% for reply in comment.replies.all %}
+          <div class="yt-comment" style="margin-top:12px;">
+            <div class="yt-comment-avatar" style="width:28px;height:28px;font-size:11px;">
+              {{ reply.user.username|first|upper }}
+            </div>
+            <div class="yt-comment-body">
+              <span class="yt-comment-author">{{ reply.user.username }}</span>
+              <span class="yt-comment-time">{% blocktrans with t=reply.created_at|timesince %}{{ t }} ago{% endblocktrans %}</span>
+              <p class="yt-comment-text">{{ reply.content }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:#606060;font-size:14px;">{% trans "No comments yet. Be the first!" %}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ===== SECONDARY (right sidebar) ===== -->
+  <div class="yt-watch-secondary">
+    <div class="yt-related-title">{% trans "Up next" %}</div>
+    {% for rv in related_videos %}
+    <a href="{% url 'video_detail' rv.pk %}" class="yt-related-item">
+      <div class="yt-related-thumb">
+        {% if rv.thumbnail %}
+          <img src="{{ rv.thumbnail.url }}" alt="{{ rv.title }}">
+        {% else %}
+          <div class="yt-related-thumb-placeholder">
+            <i class="bi bi-play-circle" style="font-size:24px;color:#909090;"></i>
+          </div>
+        {% endif %}
+      </div>
+      <div class="yt-related-meta">
+        <div class="yt-related-title-text">{{ rv.title }}</div>
+        <div class="yt-related-channel">{{ rv.uploader.username }}</div>
+        <div class="yt-related-views">{% blocktrans count counter=rv.views %}{{ counter }} view{% plural %}{{ counter }} views{% endblocktrans %}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+function toggleDesc() {
+  const text = document.getElementById('desc-text');
+  const btn = document.getElementById('desc-toggle');
+  if (!text) return;
+  if (text.classList.contains('collapsed')) {
+    text.classList.remove('collapsed');
+    btn.textContent = '{% trans "Show less" %}';
+  } else {
+    text.classList.add('collapsed');
+    btn.textContent = '{% trans "...more" %}';
+  }
+}
+</script>
+{% endblock %}

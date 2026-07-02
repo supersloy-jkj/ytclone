@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Upload video" %} - YTClone{% endblock %}
+
+{% block content %}
+<div class="yt-upload-page">
+  <h1 class="yt-upload-title">{% trans "Upload video" %}</h1>
+
+  <div style="border:1px solid #e5e5e5;border-radius:12px;padding:32px;">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="margin-bottom:20px;">
+        <label for="id_title">{% trans "Title (required)" %}</label>
+        <input type="text" name="title" id="id_title" class="yt-form-control"
+               placeholder="{% trans 'Add a title that describes your video' %}" required>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label for="id_description">{% trans "Description" %}</label>
+        <textarea name="description" id="id_description" class="yt-form-control" rows="4"
+                  placeholder="{% trans 'Tell viewers about your video' %}"></textarea>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label for="id_video_file">{% trans "Video file (required)" %}</label>
+        <input type="file" name="video_file" id="id_video_file"
+               accept="video/*" class="yt-form-control" required style="padding:8px;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label for="id_thumbnail">{% trans "Thumbnail" %}</label>
+        <input type="file" name="thumbnail" id="id_thumbnail"
+               accept="image/*" class="yt-form-control" style="padding:8px;">
+        <div style="font-size:12px;color:#606060;margin-top:4px;">
+          {% trans "Upload a picture that shows what's in your video (1280x720 recommended)." %}
+        </div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label for="id_category">{% trans "Category" %}</label>
+        <select name="category" id="id_category" class="yt-form-control">
+          <option value="">-- {% trans "Select a category" %} --</option>
+          {% for cat in form.category.field.queryset %}
+            <option value="{{ cat.pk }}">{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" name="is_short" id="id_is_short" style="width:16px;height:16px;cursor:pointer;">
+        <label for="id_is_short" style="margin:0;cursor:pointer;">
+          {% trans "This is a Short" %} <span style="color:#606060;font-weight:400;">({% trans "vertical video &le; 60 sec" %})</span>
+        </label>
+      </div>
+      <div class="yt-upload-caption-hint">
+        <i class="bi bi-badge-cc"></i>
+        {% trans "Tip: you can add subtitles/captions in multiple languages after uploading, from the video's Edit page." %}
+      </div>
+      <div style="display:flex;gap:12px;margin-top:20px;">
+        <button type="submit" style="background:#065fd4;color:#fff;border:none;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;">
+          {% trans "Upload" %}
+        </button>
+        <a href="{% url 'home' %}" style="background:#f2f2f2;color:#0f0f0f;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;">
+          {% trans "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

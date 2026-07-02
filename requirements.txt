@@ -1,0 +1,20 @@
+# Core
+Django>=4.2
+Pillow>=10.0
+
+# Database
+dj-database-url>=2.1
+
+# Static files (production)
+whitenoise>=6.6
+
+# Media storage — required on Vercel (ephemeral disk)
+django-cloudinary-storage>=0.3.0
+cloudinary>=1.36.0
+
+# Forms
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+
+# Environment variables
+python-decouple>=3.8

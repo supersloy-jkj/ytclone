@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Edit video" %} - YTClone{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;margin:0 auto;padding:32px 24px;">
+  <h1 style="font-size:22px;font-weight:600;margin-bottom:24px;">{% trans "Video details" %}</h1>
+  <div style="border:1px solid #e5e5e5;border-radius:12px;padding:32px;">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="margin-bottom:20px;">
+        <label>{% trans "Title (required)" %}</label>
+        <input type="text" name="title" class="yt-form-control" value="{{ form.title.value }}" required>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label>{% trans "Description" %}</label>
+        <textarea name="description" class="yt-form-control" rows="4">{{ form.description.value|default:"" }}</textarea>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label>{% trans "Thumbnail" %}</label>
+        {% if video.thumbnail %}
+          <div style="margin-bottom:8px;">
+            <img src="{{ video.thumbnail.url }}" style="width:200px;border-radius:8px;object-fit:cover;">
+          </div>
+        {% endif %}
+        <input type="file" name="thumbnail" accept="image/*" class="yt-form-control" style="padding:8px;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label>{% trans "Category" %}</label>
+        <select name="category" class="yt-form-control">
+          <option value="">-- {% trans "None" %} --</option>
+          {% for cat in form.category.field.queryset %}
+            <option value="{{ cat.pk }}" {% if form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
+              {{ cat.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="margin-bottom:24px;display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" name="is_published" id="id_is_published"
+               {% if video.is_published %}checked{% endif %} style="width:16px;height:16px;cursor:pointer;">
+        <label for="id_is_published" style="margin:0;cursor:pointer;">{% trans "Public (visible to everyone)" %}</label>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button type="submit" style="background:#065fd4;color:#fff;border:none;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;">
+          {% trans "Save" %}
+        </button>
+        <a href="{% url 'video_detail' video.pk %}" style="background:#f2f2f2;color:#0f0f0f;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;">
+          {% trans "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- ===== Captions / Subtitles ===== -->
+  <div style="border:1px solid #e5e5e5;border-radius:12px;padding:32px;margin-top:20px;">
+    <h2 style="font-size:16px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
+      <i class="bi bi-badge-cc"></i> {% trans "Captions" %}
+    </h2>
+    <p style="font-size:13px;color:#606060;margin-bottom:20px;">
+      {% trans "Upload WebVTT (.vtt) subtitle files so viewers can turn on captions in different languages." %}
+    </p>
+
+    {% if captions %}
+    <div style="margin-bottom:24px;display:flex;flex-direction:column;gap:8px;">
+      {% for caption in captions %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f9f9f9;border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="bi bi-chat-square-text" style="color:#606060;"></i>
+          <span style="font-size:14px;font-weight:500;">{{ caption.get_language_display }}</span>
+          {% if caption.is_default %}
+          <span style="font-size:11px;font-weight:600;color:#065fd4;background:#e8f0fe;padding:2px 8px;border-radius:10px;">{% trans "Default" %}</span>
+          {% endif %}
+        </div>
+        <form method="post" action="{% url 'delete_caption' video.pk caption.pk %}"
+              onsubmit="return confirm('{% trans "Remove these captions?" %}')">
+          {% csrf_token %}
+          <button type="submit" class="yt-icon-btn" title="{% trans 'Remove' %}" style="color:#cc0000;width:32px;height:32px;">
+            <i class="bi bi-trash"></i>
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'add_caption' video.pk %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1.6fr auto;gap:10px;align-items:end;">
+        <div>
+          <label>{% trans "Language" %}</label>
+          <select name="language" class="yt-form-control" required>
+            {% for value, label in caption_form.fields.language.choices %}
+              {% if value %}<option value="{{ value }}">{{ label }}</option>{% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>{% trans "VTT file" %}</label>
+          <input type="file" name="file" accept=".vtt" class="yt-form-control" style="padding:8px;" required>
+        </div>
+        <button type="submit" style="background:#f2f2f2;color:#0f0f0f;border:none;border-radius:20px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
+          {% trans "Add" %}
+        </button>
+      </div>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" name="is_default" id="id_caption_default" style="width:16px;height:16px;cursor:pointer;">
+        <label for="id_caption_default" style="margin:0;font-weight:400;font-size:13px;cursor:pointer;">{% trans "Set as default" %}</label>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

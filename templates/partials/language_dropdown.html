@@ -1,0 +1,24 @@
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+<div class="dropdown yt-lang-dropdown">
+  <button class="{{ btn_class|default:'yt-icon-btn' }} dropdown-toggle" type="button"
+          data-bs-toggle="dropdown" aria-expanded="false" title="{% trans 'Language' %}">
+    <i class="bi bi-translate{% if icon_size %} {{ icon_size }}{% endif %}"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end yt-dropdown yt-lang-menu">
+    <li class="yt-lang-menu-title">{% trans "Language" %}</li>
+    {% for lang_code, lang_name in LANGUAGES %}
+    <li>
+      <form action="{% url 'set_language' %}" method="post" class="yt-lang-form">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="{{ lang_code }}">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="yt-lang-option{% if lang_code == CURRENT_LANGUAGE %} active-lang{% endif %}">
+          <span>{{ lang_name }}</span>
+          {% if lang_code == CURRENT_LANGUAGE %}<i class="bi bi-check-lg"></i>{% endif %}
+        </button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</div>

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Watch history" %} - YTClone{% endblock %}
+
+{% block content %}
+<div style="padding:24px 32px;max-width:1000px;">
+  <h1 style="font-size:22px;font-weight:600;margin-bottom:24px;">{% trans "Watch history" %}</h1>
+  {% if history %}
+    {% for item in history %}
+    <a href="{% url 'video_detail' item.video.pk %}" style="display:flex;gap:16px;text-decoration:none;color:#0f0f0f;margin-bottom:16px;">
+      <div style="width:246px;height:138px;border-radius:10px;overflow:hidden;background:#e5e5e5;flex-shrink:0;position:relative;">
+        {% if item.video.thumbnail %}
+          <img src="{{ item.video.thumbnail.url }}" style="width:100%;height:100%;object-fit:cover;">
+        {% else %}
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-play-circle" style="font-size:32px;color:#909090;"></i>
+          </div>
+        {% endif %}
+        {% if item.video.has_captions %}
+          <span class="yt-cc-badge">CC</span>
+        {% endif %}
+      </div>
+      <div style="flex:1;">
+        <h3 style="font-size:16px;font-weight:500;margin-bottom:4px;">{{ item.video.title }}</h3>
+        <a href="{% url 'channel' item.video.uploader.username %}"
+           style="font-size:13px;color:#606060;text-decoration:none;">{{ item.video.uploader.username }}</a>
+        <p style="font-size:13px;color:#606060;margin:4px 0 0;">
+          {% blocktrans count counter=item.video.views %}{{ counter }} view{% plural %}{{ counter }} views{% endblocktrans %}
+          &bull; {% blocktrans with t=item.watched_at|timesince %}Watched {{ t }} ago{% endblocktrans %}
+        </p>
+      </div>
+    </a>
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center;padding:60px 20px;color:#606060;">
+      <i class="bi bi-clock-history" style="font-size:48px;color:#e5e5e5;"></i>
+      <p style="font-size:16px;margin-top:16px;">{% trans "No watch history" %}</p>
+      <p style="font-size:14px;">{% trans "Videos you watch will appear here." %}</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}YTClone{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<header class="yt-navbar">
+  <!-- Left -->
+  <div class="yt-nav-left">
+    <button class="yt-icon-btn" id="sidebar-toggle" title="{% trans 'Menu' %}">
+      <i class="bi bi-list fs-5"></i>
+    </button>
+    <a href="{% url 'home' %}" class="yt-logo">
+      <svg viewBox="0 0 90 20" fill="none" xmlns="http://www.w3.org/2000/svg" height="20">
+        <path d="M27.9 3.5c-.3-1.2-1.3-2.1-2.5-2.4C23.2.5 14.5.5 14.5.5S5.8.5 3.6 1.1C2.3 1.4 1.3 2.3 1 3.5.4 5.7.4 10 .4 10s0 4.3.6 6.5c.3 1.2 1.3 2.1 2.5 2.4 2.2.6 10.9.6 10.9.6s8.7 0 10.9-.6c1.2-.3 2.1-1.2 2.5-2.4.6-2.2.6-6.5.6-6.5s0-4.3-.5-6.5z" fill="#FF0000"/>
+        <path d="M11.8 13.9V6.1l7.3 3.9-7.3 3.9z" fill="white"/>
+        <text x="32" y="15" font-family="Roboto" font-size="14" font-weight="700" fill="#0f0f0f">YTClone</text>
+      </svg>
+    </a>
+  </div>
+
+  <!-- Center: Search -->
+  <div class="yt-nav-center">
+    <form class="yt-search-form" action="{% url 'search' %}" method="get">
+      <div class="yt-search-wrap">
+        <input type="search" name="q" class="yt-search-input"
+               placeholder="{% trans 'Search' %}" value="{{ request.GET.q }}" autocomplete="off"/>
+        <button type="submit" class="yt-search-btn" title="{% trans 'Search' %}">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </form>
+    <button class="yt-icon-btn yt-mic-btn" title="{% trans 'Search with your voice' %}">
+      <i class="bi bi-mic"></i>
+    </button>
+  </div>
+
+  <!-- Right -->
+  <div class="yt-nav-right">
+    {% include "partials/language_dropdown.html" with btn_class="yt-icon-btn" icon_size="fs-5" %}
+    {% if user.is_authenticated %}
+      <a href="{% url 'upload_video' %}" class="yt-create-btn">
+        <i class="bi bi-plus-lg"></i> {% trans "Create" %}
+      </a>
+      <button class="yt-icon-btn position-relative" title="{% trans 'Notifications' %}">
+        <i class="bi bi-bell fs-5"></i>
+      </button>
+      <div class="dropdown">
+        <button class="yt-avatar-btn dropdown-toggle" data-bs-toggle="dropdown">
+          {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" alt="avatar" class="yt-user-avatar">
+          {% else %}
+            <div class="yt-avatar-placeholder">{{ user.username|first|upper }}</div>
+          {% endif %}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end yt-dropdown">
+          <li class="yt-dropdown-header">
+            <div class="d-flex align-items-center gap-2 p-3">
+              {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" class="rounded-circle" width="40" height="40" style="object-fit:cover">
+              {% else %}
+                <div class="yt-avatar-placeholder">{{ user.username|first|upper }}</div>
+              {% endif %}
+              <div>
+                <div class="fw-semibold" style="font-size:14px;">{{ user.username }}</div>
+                <a href="{% url 'channel' user.username %}" class="text-primary" style="font-size:13px;">{% trans "View your channel" %}</a>
+              </div>
+            </div>
+          </li>
+          <li><hr class="dropdown-divider m-0"></li>
+          <li><a class="dropdown-item yt-menu-item" href="{% url 'my_videos' %}">
+            <i class="bi bi-collection-play"></i> {% trans "Your videos" %}</a></li>
+          <li><a class="dropdown-item yt-menu-item" href="{% url 'watch_history' %}">
+            <i class="bi bi-clock-history"></i> {% trans "History" %}</a></li>
+          <li><a class="dropdown-item yt-menu-item" href="{% url 'edit_profile' %}">
+            <i class="bi bi-gear"></i> {% trans "Settings" %}</a></li>
+          <li><hr class="dropdown-divider m-0"></li>
+          <li>
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button class="dropdown-item yt-menu-item" type="submit">
+                <i class="bi bi-box-arrow-right"></i> {% trans "Sign out" %}
+              </button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    {% else %}
+      <a href="{% url 'login' %}" class="yt-signin-btn">
+        <i class="bi bi-person-circle"></i> {% trans "Sign in" %}
+      </a>
+    {% endif %}
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="yt-layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="yt-sidebar" id="yt-sidebar">
+    <!-- Primary Nav -->
+    <div class="yt-sidebar-section">
+      <a href="{% url 'home' %}" class="yt-sidebar-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <i class="bi bi-house{% if request.resolver_match.url_name == 'home' %}-fill{% endif %}"></i>
+        <span class="sidebar-label">{% trans "Home" %}</span>
+      </a>
+      <a href="{% url 'shorts_page' %}" class="yt-sidebar-item {% if request.resolver_match.url_name == 'shorts_page' %}active{% endif %}">
+        <i class="bi bi-scissors"></i>
+        <span class="sidebar-label">{% trans "Shorts" %}</span>
+      </a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'subscriptions_feed' %}" class="yt-sidebar-item {% if request.resolver_match.url_name == 'subscriptions_feed' %}active{% endif %}">
+        <i class="bi bi-collection-play{% if request.resolver_match.url_name == 'subscriptions_feed' %}-fill{% endif %}"></i>
+        <span class="sidebar-label">{% trans "Subscriptions" %}</span>
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="yt-sidebar-divider"></div>
+
+    {% if user.is_authenticated %}
+    <!-- You Section -->
+    <div class="yt-sidebar-section">
+      <p class="yt-sidebar-heading sidebar-label">{% trans "You" %}</p>
+      <a href="{% url 'channel' user.username %}" class="yt-sidebar-item">
+        <i class="bi bi-person-circle"></i>
+        <span class="sidebar-label">{% trans "Your channel" %}</span>
+      </a>
+      <a href="{% url 'watch_history' %}" class="yt-sidebar-item">
+        <i class="bi bi-clock-history"></i>
+        <span class="sidebar-label">{% trans "History" %}</span>
+      </a>
+      <a href="{% url 'my_videos' %}" class="yt-sidebar-item">
+        <i class="bi bi-play-square"></i>
+        <span class="sidebar-label">{% trans "Your videos" %}</span>
+      </a>
+    </div>
+
+    <!-- Subscriptions section -->
+    {% if user.subscriptions.all %}
+    <div class="yt-sidebar-divider"></div>
+    <div class="yt-sidebar-section">
+      <p class="yt-sidebar-heading sidebar-label">{% trans "Subscriptions" %}</p>
+      {% for sub in user.subscriptions.all|slice:":7" %}
+      <a href="{% url 'channel' sub.channel.username %}" class="yt-sidebar-item">
+        {% if sub.channel.avatar %}
+          <img src="{{ sub.channel.avatar.url }}" class="rounded-circle" width="24" height="24" style="object-fit:cover;min-width:24px;">
+        {% else %}
+          <div style="width:24px;height:24px;min-width:24px;border-radius:50%;background:#cc0000;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;">
+            {{ sub.channel.username|first|upper }}
+          </div>
+        {% endif %}
+        <span class="sidebar-label">{{ sub.channel.username }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="yt-sidebar-divider"></div>
+    {% endif %}
+
+    <!-- Explore -->
+    <div class="yt-sidebar-section">
+      <p class="yt-sidebar-heading sidebar-label">{% trans "Explore" %}</p>
+      <a href="{% url 'home' %}?category=music" class="yt-sidebar-item">
+        <i class="bi bi-music-note-beamed"></i>
+        <span class="sidebar-label">{% trans "Music" %}</span>
+      </a>
+      <a href="{% url 'home' %}?category=gaming" class="yt-sidebar-item">
+        <i class="bi bi-controller"></i>
+        <span class="sidebar-label">{% trans "Gaming" %}</span>
+      </a>
+      <a href="{% url 'home' %}?category=sports" class="yt-sidebar-item">
+        <i class="bi bi-trophy"></i>
+        <span class="sidebar-label">{% trans "Sports" %}</span>
+      </a>
+    </div>
+
+    <div class="yt-sidebar-divider"></div>
+
+    <!-- Settings -->
+    <div class="yt-sidebar-section">
+      {% if user.is_authenticated %}
+      <a href="{% url 'edit_profile' %}" class="yt-sidebar-item">
+        <i class="bi bi-gear"></i>
+        <span class="sidebar-label">{% trans "Settings" %}</span>
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="yt-sidebar-footer sidebar-label">
+      <p class="text-muted" style="font-size:12px; padding:12px;">
+        &copy; 2024 YTClone
+      </p>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="yt-main" id="yt-main">
+    {% if messages %}
+    <div style="padding:8px 24px 0;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show py-2" role="alert" style="font-size:14px;">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

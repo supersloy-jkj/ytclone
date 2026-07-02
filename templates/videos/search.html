@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ query }} - YTClone {% trans "Search" %}{% endblock %}
+
+{% block content %}
+<div class="yt-search-layout">
+  {% if videos %}
+    {% for video in videos %}
+    <a href="{% url 'video_detail' video.pk %}" class="yt-search-result" style="text-decoration:none;color:#0f0f0f;">
+      <div class="yt-search-thumb">
+        {% if video.thumbnail %}
+          <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}">
+        {% else %}
+          <div class="yt-search-thumb-placeholder" style="background:#e5e5e5;">
+            <i class="bi bi-play-circle" style="font-size:36px;color:#909090;"></i>
+          </div>
+        {% endif %}
+      </div>
+      <div style="flex:1;padding-top:4px;">
+        <h3 style="font-size:18px;font-weight:400;margin-bottom:6px;color:#0f0f0f;">{{ video.title }}</h3>
+        <p style="font-size:13px;color:#606060;margin-bottom:8px;">
+          {% blocktrans count counter=video.views %}{{ counter }} view{% plural %}{{ counter }} views{% endblocktrans %}
+          &bull; {% blocktrans with t=video.uploaded_at|timesince %}{{ t }} ago{% endblocktrans %}
+        </p>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          {% if video.uploader.avatar %}
+            <img src="{{ video.uploader.avatar.url }}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+          {% else %}
+            <div style="width:24px;height:24px;border-radius:50%;background:#cc0000;color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">
+              {{ video.uploader.username|first|upper }}
+            </div>
+          {% endif %}
+          <a href="{% url 'channel' video.uploader.username %}" style="font-size:13px;color:#606060;text-decoration:none;">
+            {{ video.uploader.username }}
+          </a>
+          {% if video.has_captions %}
+          <span class="yt-cc-badge" style="position:static;" title="{% trans 'Captions available' %}">CC</span>
+          {% endif %}
+        </div>
+        <p style="font-size:13px;color:#606060;margin:0;
+            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+          {{ video.description|truncatechars:180 }}
+        </p>
+      </div>
+    </a>
+    <hr style="border:none;border-top:1px solid #e5e5e5;margin-bottom:20px;">
+    {% endfor %}
+  {% elif query %}
+    <div style="text-align:center;padding:80px 20px;color:#606060;">
+      <i class="bi bi-search" style="font-size:48px;color:#e5e5e5;"></i>
+      <p style="font-size:16px;margin-top:16px;">{% blocktrans %}No results found for "{{ query }}"{% endblocktrans %}</p>
+      <p style="font-size:14px;">{% trans "Try different keywords or check your spelling." %}</p>
+    </div>
+  {% else %}
+    <div style="text-align:center;padding:80px 20px;color:#606060;">
+      <p style="font-size:16px;">{% trans "Enter a search term to find videos." %}</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

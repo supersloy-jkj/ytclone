@@ -1,0 +1,63 @@
+{% load i18n %}
+<div class="yt-auth-art">
+  <svg class="yt-auth-art-svg" viewBox="0 0 700 900" preserveAspectRatio="xMidYMid slice"
+       xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <radialGradient id="ytGlow1" cx="30%" cy="18%" r="60%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.16"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </radialGradient>
+      <pattern id="ytDotGrid" width="22" height="22" patternUnits="userSpaceOnUse">
+        <circle cx="2" cy="2" r="1.6" fill="#ffffff" fill-opacity="0.18"/>
+      </pattern>
+    </defs>
+
+    <rect width="700" height="900" fill="url(#ytGlow1)"/>
+    <rect x="40" y="56" width="160" height="160" fill="url(#ytDotGrid)"/>
+
+    <circle class="yt-auth-blob yt-auth-blob-a" cx="560" cy="150" r="120" fill="#ffffff" fill-opacity="0.06"/>
+    <circle class="yt-auth-blob yt-auth-blob-b" cx="70" cy="520" r="90" fill="#ffffff" fill-opacity="0.07"/>
+    <circle cx="610" cy="430" r="3" fill="#ffffff" fill-opacity="0.5"/>
+    <circle cx="500" cy="360" r="2" fill="#ffffff" fill-opacity="0.4"/>
+
+    <circle cx="610" cy="700" r="170" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="1.5"/>
+
+    <g opacity="0.95">
+      <rect x="60" y="430" width="150" height="92" rx="12" fill="#ffffff" fill-opacity="0.08" transform="rotate(-8 135 476)"/>
+      <rect x="90" y="460" width="150" height="92" rx="12" fill="#ffffff" fill-opacity="0.16" transform="rotate(4 165 506)"/>
+      <g transform="translate(120 488)">
+        <rect x="0" y="0" width="150" height="92" rx="12" fill="#ffffff"/>
+        <circle cx="75" cy="46" r="22" fill="#cc0000"/>
+        <path d="M68 34 L90 46 L68 58 Z" fill="#ffffff"/>
+      </g>
+    </g>
+
+    <circle class="yt-auth-blob yt-auth-blob-c" cx="680" cy="860" r="150" fill="#ffffff" fill-opacity="0.07"/>
+    <circle cx="680" cy="860" r="150" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1.5"/>
+    <path d="M650 805 L735 860 L650 915 Z" fill="#ffffff" fill-opacity="0.14"/>
+  </svg>
+
+  <div class="yt-auth-art-content">
+    {% if variant == "register" %}
+      <h2 class="yt-auth-art-heading">{% trans "Create your channel" %}</h2>
+      <p class="yt-auth-art-subtext">{% trans "Join a global community of creators and viewers — upload, share, and grow your audience." %}</p>
+    {% else %}
+      <h2 class="yt-auth-art-heading">{% trans "Watch. Upload. Belong." %}</h2>
+      <p class="yt-auth-art-subtext">{% trans "Sign in to pick up where you left off and join a community of creators worldwide." %}</p>
+    {% endif %}
+    <ul class="yt-auth-feature-list">
+      <li class="yt-auth-feature">
+        <span class="icon-circle"><i class="bi bi-badge-cc"></i></span>
+        <span>{% trans "Closed captions on every video" %}</span>
+      </li>
+      <li class="yt-auth-feature">
+        <span class="icon-circle"><i class="bi bi-translate"></i></span>
+        <span>{% trans "Watch in your language" %}</span>
+      </li>
+      <li class="yt-auth-feature">
+        <span class="icon-circle"><i class="bi bi-camera-reels"></i></span>
+        <span>{% trans "Upload and share in HD" %}</span>
+      </li>
+    </ul>
+  </div>
+</div>

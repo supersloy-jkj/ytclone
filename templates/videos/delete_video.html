@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Delete video" %} - YTClone{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:80px auto;padding:0 24px;text-align:center;">
+  <div style="border:1px solid #e5e5e5;border-radius:12px;padding:40px;">
+    <i class="bi bi-trash" style="font-size:48px;color:#cc0000;"></i>
+    <h2 style="font-size:20px;font-weight:600;margin:16px 0 8px;">{% trans "Delete video?" %}</h2>
+    <p style="font-size:14px;color:#606060;margin-bottom:24px;">
+      {% blocktrans with title=video.title %}"{{ title }}" will be permanently deleted and can't be recovered.{% endblocktrans %}
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <a href="{% url 'video_detail' video.pk %}" style="background:#f2f2f2;color:#0f0f0f;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:500;text-decoration:none;">
+          {% trans "Cancel" %}
+        </a>
+        <button type="submit" style="background:#cc0000;color:#fff;border:none;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;">
+          {% trans "Delete" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
